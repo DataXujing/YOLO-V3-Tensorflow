@@ -22,18 +22,21 @@ parser = argparse.ArgumentParser(description="YOLO-V3 eval procedure.")
 parser.add_argument("--eval_file", type=str, default="./data/my_data/val.txt",
                     help="The path of the validation or test txt file.")
 
-parser.add_argument("--restore_path", type=str, default="/home/user/Documents/chenyang_projects/yolo_v3_voc/YOLOv3_TensorFlow_old/No_data_aug_bn_0.9/best_model_Epoch_52_step_43200.0_mAP_0.6752_loss_20.220579_lr_0.0005882013",
+parser.add_argument("--restore_path", type=str, default="./data/darknet_weights/yolov3.ckpt",
                     help="The path of the weights to restore.")
 
 parser.add_argument("--anchor_path", type=str, default="./data/yolo_anchors.txt",
                     help="The path of the anchor txt file.")
 
-parser.add_argument("--class_name_path", type=str, default="./data/my_data/voc.names",
+parser.add_argument("--class_name_path", type=str, default="./data/coco.names",
                     help="The path of the class names.")
 
 # some numbers
 parser.add_argument("--img_size", nargs='*', type=int, default=[416, 416],
                     help="Resize the input image to `img_size`, size format: [width, height]")
+
+parser.add_argument("--letterbox_resize", type=lambda x: (str(x).lower() == 'true'), default=False,
+                    help="Whether to use the letterbox resize, i.e., keep the original image aspect ratio.")
 
 parser.add_argument("--num_threads", type=int, default=10,
                     help="Number of threads for image processing used in tf.data pipeline.")
@@ -41,14 +44,17 @@ parser.add_argument("--num_threads", type=int, default=10,
 parser.add_argument("--prefetech_buffer", type=int, default=5,
                     help="Prefetech_buffer used in tf.data pipeline.")
 
-parser.add_argument("--nms_threshold", type=float, default=0.5,
+parser.add_argument("--nms_threshold", type=float, default=0.45,
                     help="IOU threshold in nms operation.")
 
-parser.add_argument("--score_threshold", type=float, default=0.5,
+parser.add_argument("--score_threshold", type=float, default=0.01,
                     help="Threshold of the probability of the classes in nms operation.")
 
-parser.add_argument("--nms_topk", type=int, default=50,
+parser.add_argument("--nms_topk", type=int, default=400,
                     help="Keep at most nms_topk outputs after nms.")
+
+parser.add_argument("--use_voc_07_metric", type=lambda x: (str(x).lower() == 'true'), default=False,
+                    help="Whether to use the voc 2007 mAP metrics.")
 
 args = parser.parse_args()
 
@@ -71,7 +77,7 @@ gpu_nms_op = gpu_nms(pred_boxes_flag, pred_scores_flag, args.class_num, args.nms
 val_dataset = tf.data.TextLineDataset(args.eval_file)
 val_dataset = val_dataset.batch(1)
 val_dataset = val_dataset.map(
-    lambda x: tf.py_func(get_batch_data, [x, args.class_num, args.img_size, args.anchors, 'val'], [tf.int64, tf.float32, tf.float32, tf.float32, tf.float32]),
+    lambda x: tf.py_func(get_batch_data, [x, args.class_num, args.img_size, args.anchors, 'val', False, False, args.letterbox_resize], [tf.int64, tf.float32, tf.float32, tf.float32, tf.float32]),
     num_parallel_calls=args.num_threads
 )
 val_dataset.prefetch(args.prefetech_buffer)
@@ -117,18 +123,18 @@ with tf.Session() as sess:
         val_loss_class.update(__loss[4])
 
     rec_total, prec_total, ap_total = AverageMeter(), AverageMeter(), AverageMeter()
-    gt_dict = parse_gt_rec(args.eval_file, args.img_size)
+    gt_dict = parse_gt_rec(args.eval_file, args.img_size, args.letterbox_resize)
     print('mAP eval:')
     for ii in range(args.class_num):
-        npos, nd, rec, prec, ap = voc_eval(gt_dict, val_preds, ii, iou_thres=0.5, use_07_metric=False)
+        npos, nd, rec, prec, ap = voc_eval(gt_dict, val_preds, ii, iou_thres=0.5, use_07_metric=args.use_voc_07_metric)
         rec_total.update(rec, npos)
         prec_total.update(prec, nd)
         ap_total.update(ap, 1)
         print('Class {}: Recall: {:.4f}, Precision: {:.4f}, AP: {:.4f}'.format(ii, rec, prec, ap))
 
-    mAP = ap_total.avg
+    mAP = ap_total.average
     print('final mAP: {:.4f}'.format(mAP))
-    print("recall: {:.3f}, precision: {:.3f}".format(rec_total.avg, prec_total.avg))
+    print("recall: {:.3f}, precision: {:.3f}".format(rec_total.average, prec_total.average))
     print("total_loss: {:.3f}, loss_xy: {:.3f}, loss_wh: {:.3f}, loss_conf: {:.3f}, loss_class: {:.3f}".format(
-        val_loss_total.avg, val_loss_xy.avg, val_loss_wh.avg, val_loss_conf.avg, val_loss_class.avg
+        val_loss_total.average, val_loss_xy.average, val_loss_wh.average, val_loss_conf.average, val_loss_class.average
     ))

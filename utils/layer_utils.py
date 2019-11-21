@@ -1,5 +1,5 @@
 # coding: utf-8
-# 基本的backbone
+
 from __future__ import division, print_function
 
 import numpy as np
@@ -12,10 +12,9 @@ def conv2d(inputs, filters, kernel_size, strides=1):
         pad_beg = pad_total // 2
         pad_end = pad_total - pad_beg
 
-        padded_inputs = tf.pad(inputs, [[0, 0], [pad_beg, pad_end],  # 表示在第1维 前面补pad_beg个0，在第2维后面pad_end个0,在第1维 前面补pad_beg个0，在第2维后面pad_end个0,
+        padded_inputs = tf.pad(inputs, [[0, 0], [pad_beg, pad_end],
                                         [pad_beg, pad_end], [0, 0]], mode='CONSTANT')
         return padded_inputs
-
     if strides > 1: 
         inputs = _fixed_padding(inputs, kernel_size)
     inputs = slim.conv2d(inputs, filters, kernel_size, stride=strides,
@@ -25,7 +24,7 @@ def conv2d(inputs, filters, kernel_size, strides=1):
 def darknet53_body(inputs):
     def res_block(inputs, filters):
         shortcut = inputs
-        net = conv2d(inputs, filters * 1, 1)  # filters,kernel_size,strides
+        net = conv2d(inputs, filters * 1, 1)
         net = conv2d(net, filters * 2, 3)
 
         net = net + shortcut

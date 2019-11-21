@@ -10,6 +10,8 @@ import numpy as np
 import xml.etree.ElementTree as ET
 
 
+# 这部分休要修改
+
 
 class Data_preprocess(object):
     '''
@@ -20,7 +22,7 @@ class Data_preprocess(object):
         self.image_size = 416
         self.batch_size = 32
         self.cell_size = 13
-        self.classes = ["biopsy forceps"]
+        self.classes = ["hat","person"]
         self.num_classes = len(self.classes)
         self.box_per_cell = 5
         self.class_to_ind = dict(zip(self.classes, range(self.num_classes)))
@@ -45,12 +47,25 @@ class Data_preprocess(object):
         
         my_index = 0
         for ind in image_ind:
-            class_ind, x1, y1, x2, y2 = self.load_data(ind)
+            class_inds, x1s, y1s, x2s, y2s = self.load_data(ind)
 
-            with open(model+".txt","a") as f:
-                f.write(str(my_index) + " " + data_path+"/ImageSets/"+ind+".jpg" +" "+ str(class_ind) + " " + str(x1) + " " + str(y1) + " " + str(x2) + " " + str(y2) + "\n")
+            if len(class_inds) == 0:
+                pass
+            else:
+                annotation_label = ""
+                #box_x: label_index, x_min,y_min,x_max,y_max
+                for label_i in range(len(clas_inds)):
 
-            my_index += 1
+                    annotation_label += " " + str(class_inds[label_i])
+                    annotation_label += " " + str(x1s[label_i])
+                    annotation_label += " " + str(y1s[label_i])
+                    annotation_label += " " + str(x2s[label_i])
+                    annotation_label += " " + str(y2s[label_i])
+
+                with open(model+".txt","a") as f:
+                    f.write(str(my_index) + " " + data_path+"/ImageSets/"+ind+".jpg" + annotation_label + "\n")
+
+                my_index += 1
 
             print(my_index)
 
@@ -67,6 +82,12 @@ class Data_preprocess(object):
         # w_ratio = 1.0 * self.image_size / image_width
 
         objects = tree.findall('object')
+
+        class_inds = []
+        x1s = []
+        y1s = []
+        x2s = []
+        y2s = []
 
         for obj in objects:
             box = obj.find('bndbox')
@@ -91,7 +112,16 @@ class Data_preprocess(object):
             # label[yind, xind, :, 1:5] = boxes
             # label[yind, xind, :, 5 + class_ind] = 1
 
-        return class_ind, x1, y1, x2, y2
+            if x1 >= x2 or y1 >= y2:
+                pass
+            else:
+                class_inds.append(class_ind)
+                x1s.append(x1)
+                y1s.append(y1)
+                x2s.append(x2)
+                y2s.append(y2)
+
+        return class_inds, x1s, y1s, x2s, y2s
 
 
 def data_split(img_path):
@@ -134,17 +164,20 @@ def data_split(img_path):
 
 
 if __name__ == "__main__":
-
+    
+    # 分割train, val, test
     img_path = "./data/my_data/ImageSets"
     data_split(img_path)
+    print("===========split data finish============")
 
-    #------
-    data_path = "./data/my_data"
+    # 做YOLO V3需要的训练集
+    data_path = "./data/my_data"  # 尽量用绝对路径
 
     data_p = Data_preprocess(data_path)
     data_p.load_labels("train")
     data_p.load_labels("test")
     data_p.load_labels("val")
+    print("==========data pro finish===========")
 
 
 

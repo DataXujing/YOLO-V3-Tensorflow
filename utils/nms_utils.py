@@ -8,7 +8,6 @@ import tensorflow as tf
 def gpu_nms(boxes, scores, num_classes, max_boxes=50, score_thresh=0.5, nms_thresh=0.5):
     """
     Perform NMS on GPU using TensorFlow.
-    对所有类别做NMS
 
     params:
         boxes: tensor of shape [1, 10647, 4] # 10647=(13*13+26*26+52*52)*3, for input 416*416 image

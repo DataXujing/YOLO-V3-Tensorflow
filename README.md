@@ -69,6 +69,7 @@ python data_pro.py
 ```
 分割训练集，验证集，测试集并在`./data/my_data/`下生成`train.txt/val.txt/test.txt`，对于一张图像对应一行数据，包括`image_index`,`image_absolute_path`,`box_1`,`box_2`,...,`box_n`,每个字段中间是用空格分隔的，其中:
 
++ `image_index`文本的行号
 + `box_x`的形式为：`label_index, x_min,y_min,x_max,y_max`(注意坐标原点在图像的左上角)
 + `label_index`是label对应的index(取值为0-class_num-1),这里要注意YOLO系列的模型训练与SSD不同，label不包含background
 
@@ -99,7 +100,7 @@ python get_kmeans.py
 
 可以得到9个anchors和平均的IOU,把anchors保存在文本文件：`./data/yolo_anchors.txt`, 
 
-**注意: YOLO的anchor通过Kmeans生成是在原图像的尺寸上，需要resize这些anchors到训练的目标尺寸，并将其写入到anchor txt文件，这样你就不应该调整anchors**
+**注意: Kmeans计算出的YOLO Anchors是在在调整大小的图像比例的，默认的调整大小方法是保持图像的纵横比。**
 
 
 
@@ -193,7 +194,7 @@ CUDA_VISIBLE_DEVICES=GPU_ID python train.py
 
 ### 5.🔖 推断
 
-我们使用`test_single_image.py`和`video_test.py`推断单张图片和视频，测试Demo在Section 6提供。你可以下载我们与训练的安全帽识别模型进行测试，下载地址：<>
+我们使用`test_single_image.py`和`video_test.py`推断单张图片和视频，测试Demo在Section 6提供。你可以下载我们预训练的安全帽识别模型进行测试，下载地址：<>
 
 
 ### 6.⛏Demo
@@ -204,7 +205,45 @@ CUDA_VISIBLE_DEVICES=GPU_ID python train.py
 
 ![]()
 
-### 7.😉 致谢
+
+### 7.⛏训练的一些Trick
+
+这些Trick来源于：<https://github.com/wizyoung/YOLOv3_TensorFlow>
+
+(1) 使用two-stage训练或one-stage训练:
+
+Two-stage training:
+
+First stage: Restore darknet53_body part weights from COCO checkpoints, train the yolov3_head with big learning rate like 1e-3 until the loss reaches to a low level.
+
+Second stage: Restore the weights from the first stage, then train the whole model with small learning rate like 1e-4 or smaller. At this stage remember to restore the optimizer parameters if you use optimizers like adam.
+
+One-stage training:
+
+Just restore the whole weight file except the last three convolution layers (Conv_6, Conv_14, Conv_22). In this condition, be careful about the possible nan loss value.
+
+(2) args.py中有很多有用的训练参数调整策略:
+
+Cosine decay of lr (SGDR)
+
+Multi-scale training
+
+Label smoothing
+
+Mix up data augmentation
+
+Focal loss
+
+这么多策略，不一定都能提升你的模型性能，根据自己的数据集自行调整选择.
+
+(3) 注意：
+
+This [paper](https://arxiv.org/abs/1902.04103) from gluon-cv has proved that data augmentation is critical to YOLO v3, which is completely in consistent with my own experiments. Some data augmentation strategies that seems reasonable may lead to poor performance. For example, after introducing random color jittering, the mAP on my own dataset drops heavily. Thus I hope you pay extra attention to the data augmentation.
+
+(4) Loss nan? Setting a bigger warm_up_epoch number or smaller learning rate and try several more times. If you fine-tune the whole model, using adam may cause nan value sometimes. You can try choosing momentum optimizer.
+
+
+### 8.😉 致谢
 
 Name                      |   GitHub                                                       |
 :-:                       |  :-:                                                           |

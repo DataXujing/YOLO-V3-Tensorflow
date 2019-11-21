@@ -128,6 +128,7 @@ def parse_data(line, class_num, img_size, anchors, mode, letterbox_resize):
     if not isinstance(line, list):
         img_idx, pic_path, boxes, labels, _, _ = parse_line(line)
         img = cv2.imread(pic_path)
+        # print(img.shape[:2])
         # expand the 2nd dimension, mix up weight default to 1.
         boxes = np.concatenate((boxes, np.full(shape=(boxes.shape[0], 1), fill_value=1., dtype=np.float32)), axis=-1)
     else:

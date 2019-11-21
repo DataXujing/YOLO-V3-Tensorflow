@@ -7,7 +7,7 @@
 
 ### 1. 📣 数据介绍
 
-确定了业务场景之后，需要手机大量的数据（之前参加过一个安全帽识别检测的比赛，但是数据在比赛平台无法下载为己用），一般来说包含两大来源，一部分是网络数据，可以通过百度、Google图片爬虫拿到，另一部分是用户场景的视频录像，后一部分相对来说数据量更大，但出于商业因素几乎不会开放。本文开源的安全帽检测数据集([SafetyHelmetWearing-Dataset, SHWD](https://github.com/njvisionpower/Safety-Helmet-Wearing-Dataset))主要通过爬虫拿到，总共有7581张图像，包含9044个佩戴安全帽的bounding box（正类），以及111514个未佩戴安全帽的bounding box(负类)，所有的图像用labelimg标注出目标区域及类别。其中每个bounding box的标签：hat”表示佩戴安全帽，“person”表示普通未佩戴的行人头部区域的bounding box。另外本数据集中person标签的数据大多数来源于[SCUT-HEAD](https://github.com/HCIILAB/SCUT-HEAD-Dataset-Release)数据集，用于判断是未佩戴安全帽的人。大致说一下数据集构造的过程：
+确定了业务场景之后，需要收集大量的数据（之前参加过一个安全帽识别检测的比赛，但是数据在比赛平台无法下载为己用），一般来说包含两大来源，一部分是网络数据，可以通过百度、Google图片爬虫拿到，另一部分是用户场景的视频录像，后一部分相对来说数据量更大，但出于商业因素几乎不会开放。本文开源的安全帽检测数据集([SafetyHelmetWearing-Dataset, SHWD](https://github.com/njvisionpower/Safety-Helmet-Wearing-Dataset))主要通过爬虫拿到，总共有7581张图像，包含9044个佩戴安全帽的bounding box（正类），以及111514个未佩戴安全帽的bounding box(负类)，所有的图像用labelimg标注出目标区域及类别。其中每个bounding box的标签：“hat”表示佩戴安全帽，“person”表示普通未佩戴的行人头部区域的bounding box。另外本数据集中person标签的数据大多数来源于[SCUT-HEAD](https://github.com/HCIILAB/SCUT-HEAD-Dataset-Release)数据集，用于判断是未佩戴安全帽的人。大致说一下数据集构造的过程：
 
 1.数据爬取
 
@@ -47,7 +47,7 @@ Packages:
 - opencv-python
 - tqdm
 
-将预训练的darknet的权重下载，下载地址：<https://pjreddie.com/media/files/yolov3.weights>,并将该weight文件拷贝大`./data/darknet_weights/`下，因为这是darknet版本的预训练权重，需要转化为Tensorflow可用的版本，运行如下代码可以实现：
+将预训练的darknet的权重下载，下载地址：<https://pjreddie.com/media/files/yolov3.weights>,并将该weight文件拷贝到`./data/darknet_weights/`下，因为这是darknet版本的预训练权重，需要转化为Tensorflow可用的版本，运行如下代码可以实现：
 
 ```shell
 python convert_weight.py
@@ -55,7 +55,7 @@ python convert_weight.py
 
 这样转化后的Tensorflow checkpoint文件被存放在：`./data/darknet_weights/`目录。你也可以下载已经转化好的模型：
 
-[Google云盘]((https://drive.google.com/drive/folders/1mXbNgNxyXPi7JNsnBaxEv1-nWr7SVoQt?usp=sharing) [GitHub Release](https://github.com/wizyoung/YOLOv3_TensorFlow/releases/) 
+[Google云盘](https://drive.google.com/drive/folders/1mXbNgNxyXPi7JNsnBaxEv1-nWr7SVoQt?usp=sharing) [GitHub Release](https://github.com/wizyoung/YOLOv3_TensorFlow/releases/) 
 
 
 ### 3.🔰 训练数据构建
@@ -67,17 +67,19 @@ python convert_weight.py
 ```shell
 python data_pro.py
 ```
-分割训练集，验证集，测试集并在`./data/my_data/`下生成`train.txt/val.txt/test.txt`，对于一张图像对应一行数据，包括`image_index`,`image_absolute_path`,`box_1`,`box_2`,...,`box_n`,每个字段中间是用空格分隔的，其中:
+分割训练集，验证集，测试集并在`./data/my_data/`下生成`train.txt/val.txt/test.txt`，对于一张图像对应一行数据，包括`image_index`,`image_absolute_path`, `img_width`, `img_height`,`box_1`,`box_2`,...,`box_n`,每个字段中间是用空格分隔的，其中:
 
 + `image_index`文本的行号
++ `image_absolute_path` 一定是绝对路径
++ `img_width`, `img_height`,`box_1`,`box_2`,...,`box_n`中涉及数值的取值一定取int型
 + `box_x`的形式为：`label_index, x_min,y_min,x_max,y_max`(注意坐标原点在图像的左上角)
 + `label_index`是label对应的index(取值为0-class_num-1),这里要注意YOLO系列的模型训练与SSD不同，label不包含background
 
 例子：
 
 ```
-0 xxx/xxx/a.jpg 0 453 369 473 391 1 588 245 608 268
-1 xxx/xxx/b.jpg 1 466 403 485 422 2 793 300 809 320
+0 xxx/xxx/a.jpg 1920,1080,0 453 369 473 391 1 588 245 608 268
+1 xxx/xxx/b.jpg 1920,1080,1 466 403 485 422 2 793 300 809 320
 ...
 ```
 
@@ -98,6 +100,8 @@ person
 python get_kmeans.py
 ```
 
+![](docs/kmeans.png)
+
 可以得到9个anchors和平均的IOU,把anchors保存在文本文件：`./data/yolo_anchors.txt`, 
 
 **注意: Kmeans计算出的YOLO Anchors是在在调整大小的图像比例的，默认的调整大小方法是保持图像的纵横比。**
@@ -112,8 +116,8 @@ python get_kmeans.py
 <summary><mark><font color=darkred>修改arg.py</font></mark></summary>
 <pre><code>
 ### Some paths
-train_file = './data/my_data/train.txt'  # The path of the training txt file.
-val_file = './data/my_data/val.txt'  # The path of the validation txt file.
+train_file = './data/my_data/label/train.txt'  # The path of the training txt file.
+val_file = './data/my_data/label/val.txt'  # The path of the validation txt file.
 restore_path = './data/darknet_weights/yolov3.ckpt'  # The path of the weights to restore.
 save_dir = './checkpoint/'  # The directory of the weights to save.
 log_dir = './data/logs/'  # The directory to store the tensorboard log files.
@@ -121,11 +125,12 @@ progress_log_path = './data/progress.log'  # The path to record the training pro
 anchor_path = './data/yolo_anchors.txt'  # The path of the anchor txt file.
 class_name_path = './data/coco.names'  # The path of the class names.
 ### Training releated numbers
-batch_size = 2  # 需要调整为自己的类别数
+batch_size = 32  #6
 img_size = [416, 416]  # Images will be resized to `img_size` and fed to the network, size format: [width, height]
-total_epoches = 500  # 训练周期调整
-train_evaluation_step = 50  # Evaluate on the training batch after some steps.
-val_evaluation_epoch = 1  # Evaluate on the whole validation dataset after some steps. Set to None to evaluate every epoch.
+letterbox_resize = True  # Whether to use the letterbox resize, i.e., keep the original aspect ratio in the resized image.
+total_epoches = 500
+train_evaluation_step = 100  # Evaluate on the training batch after some steps.
+val_evaluation_epoch = 50  # Evaluate on the whole validation dataset after some epochs. Set to None to evaluate every epoch.
 save_epoch = 10  # Save the model after some epochs.
 batch_norm_decay = 0.99  # decay in bn ops
 weight_decay = 5e-4  # l2 weight decay
@@ -134,45 +139,52 @@ global_step = 0  # used when resuming training
 num_threads = 10  # Number of threads for image processing used in tf.data pipeline.
 prefetech_buffer = 5  # Prefetech_buffer used in tf.data pipeline.
 ### Learning rate and optimizer
-optimizer_name = 'adam'  # Chosen from [sgd, momentum, adam, rmsprop]
+optimizer_name = 'momentum'  # Chosen from [sgd, momentum, adam, rmsprop]
 save_optimizer = True  # Whether to save the optimizer parameters into the checkpoint file.
-learning_rate_init = 1e-3
-lr_type = 'exponential'  # Chosen from [fixed, exponential, cosine_decay, cosine_decay_restart, piecewise]
+learning_rate_init = 1e-4
+lr_type = 'piecewise'  # Chosen from [fixed, exponential, cosine_decay, cosine_decay_restart, piecewise]
 lr_decay_epoch = 5  # Epochs after which learning rate decays. Int or float. Used when chosen `exponential` and `cosine_decay_restart` lr_type.
 lr_decay_factor = 0.96  # The learning rate decay factor. Used when chosen `exponential` lr_type.
 lr_lower_bound = 1e-6  # The minimum learning rate.
-# piecewise params
-pw_boundaries = [60, 80]  # epoch based boundaries
-pw_values = [learning_rate_init, 3e-5, 1e-4]
+# only used in piecewise lr type
+pw_boundaries = [30, 50]  # epoch based boundaries
+pw_values = [learning_rate_init, 3e-5, 1e-5]
 ### Load and finetune
 # Choose the parts you want to restore the weights. List form.
-# Set to None to restore the whole model.
-restore_part = ['yolov3/darknet53_body']
+# restore_include: None, restore_exclude: None  => restore the whole model
+# restore_include: None, restore_exclude: scope  => restore the whole model except `scope`
+# restore_include: scope1, restore_exclude: scope2  => if scope1 contains scope2, restore scope1 and not restore scope2 (scope1 - scope2)
+# choise 1: only restore the darknet body
+# restore_include = ['yolov3/darknet53_body']
+# restore_exclude = None
+# choise 2: restore all layers except the last 3 conv2d layers in 3 scale
+restore_include = None
+restore_exclude = ['yolov3/yolov3_head/Conv_14', 'yolov3/yolov3_head/Conv_6', 'yolov3/yolov3_head/Conv_22']
 # Choose the parts you want to finetune. List form.
 # Set to None to train the whole model.
 update_part = ['yolov3/yolov3_head']
 ### other training strategies
-multi_scale_train = False  # Whether to apply multi-scale training strategy. Image size varies from [320, 320] to [640, 640] by default.
-use_label_smooth = False # Whether to use class label smoothing strategy.
-use_focal_loss = False  # Whether to apply focal loss on the conf loss.
-use_mix_up = False  # Whether to use mix up data augmentation strategy. # 数据增强
+multi_scale_train = True  # Whether to apply multi-scale training strategy. Image size varies from [320, 320] to [640, 640] by default.
+use_label_smooth = True # Whether to use class label smoothing strategy.
+use_focal_loss = True  # Whether to apply focal loss on the conf loss.
+use_mix_up = True  # Whether to use mix up data augmentation strategy. 
 use_warm_up = True  # whether to use warm up strategy to prevent from gradient exploding.
 warm_up_epoch = 3  # Warm up training epoches. Set to a larger value if gradient explodes.
 ### some constants in validation
-# nms 非极大值抑制
-nms_threshold = 0.5  # iou threshold in nms operation
-score_threshold = 0.5  # threshold of the probability of the classes in nms operation
-nms_topk = 50  # keep at most nms_topk outputs after nms
+# nms
+nms_threshold = 0.45  # iou threshold in nms operation
+score_threshold = 0.01  # threshold of the probability of the classes in nms operation, i.e. score = pred_confs * pred_probs. set lower for higher recall.
+nms_topk = 150  # keep at most nms_topk outputs after nms
 # mAP eval
 eval_threshold = 0.5  # the iou threshold applied in mAP evaluation
+use_voc_07_metric = False  # whether to use voc 2007 evaluation metric, i.e. the 11-point metric
 ### parse some params
 anchors = parse_anchors(anchor_path)
 classes = read_class_names(class_name_path)
 class_num = len(classes)
 train_img_cnt = len(open(train_file, 'r').readlines())
 val_img_cnt = len(open(val_file, 'r').readlines())
-train_batch_num = int(math.ceil(float(train_img_cnt) / batch_size))  # iteration
-
+train_batch_num = int(math.ceil(float(train_img_cnt) / batch_size))
 lr_decay_freq = int(train_batch_num * lr_decay_epoch)
 pw_boundaries = [float(i) * train_batch_num + global_step for i in pw_boundaries]
 </code></pre>

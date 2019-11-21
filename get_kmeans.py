@@ -98,8 +98,8 @@ def parse_anno(annotation_path, target_size=None):
     result = []
     for line in anno:
         s = line.strip().split(' ')
-        img_w = int(s[2])
-        img_h = int(s[3])
+        img_w = int(float(s[2]))
+        img_h = int(float(s[3]))
         s = s[4:]
         box_cnt = len(s) // 5
         for i in range(box_cnt):
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     # if target_resize is speficied, the anchors are on the resized image scale
     # if target_resize is set to None, the anchors are on the original image scale
     target_size = [416, 416]
-    annotation_path = "./data/my_data/train.txt"
+    annotation_path = "./data/my_data/label/train.txt"
     anno_result = parse_anno(annotation_path, target_size=target_size)
     anchors, ave_iou = get_kmeans(anno_result, 9)
 

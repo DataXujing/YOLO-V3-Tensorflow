@@ -33,12 +33,12 @@ class Data_preprocess(object):
 
     def load_labels(self, model):
         if model == 'train':
-            txtname = os.path.join(self.data_path, 'train_img.txt')
+            txtname = os.path.join(self.data_path, 'ImageSets/Main/train.txt')
         if model == 'test':
-            txtname = os.path.join(self.data_path, 'test_img.txt')
+            txtname = os.path.join(self.data_path, 'ImageSets/Main/test.txt')
 
         if model == "val":
-            txtname = os.path.join(self.data_path, 'val_img.txt')
+            txtname = os.path.join(self.data_path, 'ImageSets/Main/val.txt')
 
 
         with open(txtname, 'r') as f:
@@ -47,14 +47,14 @@ class Data_preprocess(object):
         
         my_index = 0
         for ind in image_ind:
-            class_inds, x1s, y1s, x2s, y2s = self.load_data(ind)
+            class_inds, x1s, y1s, x2s, y2s,img_width,img_height = self.load_data(ind)
 
             if len(class_inds) == 0:
                 pass
             else:
                 annotation_label = ""
                 #box_x: label_index, x_min,y_min,x_max,y_max
-                for label_i in range(len(clas_inds)):
+                for label_i in range(len(class_inds)):
 
                     annotation_label += " " + str(class_inds[label_i])
                     annotation_label += " " + str(x1s[label_i])
@@ -62,8 +62,8 @@ class Data_preprocess(object):
                     annotation_label += " " + str(x2s[label_i])
                     annotation_label += " " + str(y2s[label_i])
 
-                with open(model+".txt","a") as f:
-                    f.write(str(my_index) + " " + data_path+"/ImageSets/"+ind+".jpg" + annotation_label + "\n")
+                with open("./data/my_data/label/"+model+".txt","a") as f:
+                    f.write(str(my_index) + " " + data_path+"/JPEGImages/"+ind+".jpg"+" "+str(img_width) +" "+str(img_height)+ annotation_label + "\n")
 
                 my_index += 1
 
@@ -76,8 +76,8 @@ class Data_preprocess(object):
         filename = os.path.join(self.data_path, 'Annotations', index + '.xml')
         tree = ET.parse(filename)
         image_size = tree.find('size')
-        # image_width = float(image_size.find('width').text)
-        # image_height = float(image_size.find('height').text)
+        image_width = int(float(image_size.find('width').text))
+        image_height = int(float(image_size.find('height').text))
         # h_ratio = 1.0 * self.image_size / image_height
         # w_ratio = 1.0 * self.image_size / image_width
 
@@ -91,37 +91,38 @@ class Data_preprocess(object):
 
         for obj in objects:
             box = obj.find('bndbox')
-            x1 = float(box.find('xmin').text)
-            y1 = float(box.find('ymin').text)
-            x2 = float(box.find('xmax').text)
-            y2 = float(box.find('ymax').text)
+            x1 = int(float(box.find('xmin').text))
+            y1 = int(float(box.find('ymin').text))
+            x2 = int(float(box.find('xmax').text))
+            y2 = int(float(box.find('ymax').text))
             # x1 = max(min((float(box.find('xmin').text)) * w_ratio, self.image_size), 0)
             # y1 = max(min((float(box.find('ymin').text)) * h_ratio, self.image_size), 0)
             # x2 = max(min((float(box.find('xmax').text)) * w_ratio, self.image_size), 0)
             # y2 = max(min((float(box.find('ymax').text)) * h_ratio, self.image_size), 0)
-            class_ind = self.class_to_ind[obj.find('name').text]
-            # class_ind = self.class_to_ind[obj.find('name').text.lower().strip()]
+            if obj.find('name').text in self.classes:
+                class_ind = self.class_to_ind[obj.find('name').text]
+                # class_ind = self.class_to_ind[obj.find('name').text.lower().strip()]
 
-            # boxes = [0.5 * (x1 + x2) / self.image_size, 0.5 * (y1 + y2) / self.image_size, np.sqrt((x2 - x1) / self.image_size), np.sqrt((y2 - y1) / self.image_size)]
-            # cx = 1.0 * boxes[0] * self.cell_size
-            # cy = 1.0 * boxes[1] * self.cell_size
-            # xind = int(np.floor(cx))
-            # yind = int(np.floor(cy))
-            
-            # label[yind, xind, :, 0] = 1
-            # label[yind, xind, :, 1:5] = boxes
-            # label[yind, xind, :, 5 + class_ind] = 1
+                # boxes = [0.5 * (x1 + x2) / self.image_size, 0.5 * (y1 + y2) / self.image_size, np.sqrt((x2 - x1) / self.image_size), np.sqrt((y2 - y1) / self.image_size)]
+                # cx = 1.0 * boxes[0] * self.cell_size
+                # cy = 1.0 * boxes[1] * self.cell_size
+                # xind = int(np.floor(cx))
+                # yind = int(np.floor(cy))
+                
+                # label[yind, xind, :, 0] = 1
+                # label[yind, xind, :, 1:5] = boxes
+                # label[yind, xind, :, 5 + class_ind] = 1
 
-            if x1 >= x2 or y1 >= y2:
-                pass
-            else:
-                class_inds.append(class_ind)
-                x1s.append(x1)
-                y1s.append(y1)
-                x2s.append(x2)
-                y2s.append(y2)
+                if x1 >= x2 or y1 >= y2:
+                    pass
+                else:
+                    class_inds.append(class_ind)
+                    x1s.append(x1)
+                    y1s.append(y1)
+                    x2s.append(x2)
+                    y2s.append(y2)
 
-        return class_inds, x1s, y1s, x2s, y2s
+        return class_inds, x1s, y1s, x2s, y2s, image_width, image_height
 
 
 def data_split(img_path):
@@ -141,19 +142,19 @@ def data_split(img_path):
     for file in files:
         if file in val_part:
 
-            with open("./data/my_data/val_img.txt","a") as val_f:
+            with open("./data/my_data/ImageSets/Main/val.txt","a") as val_f:
                 val_f.write(file[:-4] + "\n" )
 
             val_index += 1
 
         elif file in test_part:
-            with open("./data/my_data/test_img.txt","a") as test_f:
+            with open("./data/my_data/ImageSets/Main/test.txt","a") as test_f:
                 test_f.write(file[:-4] + "\n")
 
             test_index += 1
 
         else:
-            with open("./data/my_data/train_img.txt","a") as train_f:
+            with open("./data/my_data/ImageSets/Main/train.txt","a") as train_f:
                 train_f.write(file[:-4] + "\n")
 
             train_index += 1  
@@ -166,12 +167,13 @@ def data_split(img_path):
 if __name__ == "__main__":
     
     # 分割train, val, test
-    img_path = "./data/my_data/ImageSets"
-    data_split(img_path)
+    # img_path = "./data/my_data/ImageSets"
+    # data_split(img_path)
     print("===========split data finish============")
 
     # 做YOLO V3需要的训练集
-    data_path = "./data/my_data"  # 尽量用绝对路径
+    base_path = os.getcwd()
+    data_path = os.path.join(base_path,"data/my_data")  # 绝对路径
 
     data_p = Data_preprocess(data_path)
     data_p.load_labels("train")

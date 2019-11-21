@@ -7,8 +7,8 @@ from utils.misc_utils import parse_anchors, read_class_names
 import math
 
 ### Some paths
-train_file = './data/my_data/train.txt'  # The path of the training txt file.
-val_file = './data/my_data/val.txt'  # The path of the validation txt file.
+train_file = './data/my_data/label/train.txt'  # The path of the training txt file.
+val_file = './data/my_data/label/val.txt'  # The path of the validation txt file.
 restore_path = './data/darknet_weights/yolov3.ckpt'  # The path of the weights to restore.
 save_dir = './checkpoint/'  # The directory of the weights to save.
 log_dir = './data/logs/'  # The directory to store the tensorboard log files.

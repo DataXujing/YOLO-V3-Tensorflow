@@ -26,7 +26,7 @@ parser.add_argument("--letterbox_resize", type=lambda x: (str(x).lower() == 'tru
                     help="Whether to use the letterbox resize.")
 parser.add_argument("--class_name_path", type=str, default="./data/coco.names",
                     help="The path of the class names.")
-parser.add_argument("--restore_path", type=str, default="./data/darknet_weights/yolov3.ckpt",
+parser.add_argument("--restore_path", type=str, default="./checkpoint/best_model_Epoch_200_step_34370_mAP_0.8121_loss_9.4284_lr_1e-05",
                     help="The path of the weights to restore.")
 parser.add_argument("--save_video", type=lambda x: (str(x).lower() == 'true'), default=False,
                     help="Whether to save the video detection results.")

@@ -47,15 +47,13 @@ Packages:
 - opencv-python
 - tqdm
 
-将预训练的darknet的权重下载，下载地址：<https://pjreddie.com/media/files/yolov3.weights>,并将该weight文件拷贝到`./data/darknet_weights/`下，因为这是darknet版本的预训练权重，需要转化为Tensorflow可用的版本，运行如下代码可以实现：
+将预训练的darknet的权重下载，官方下载地址：<https://pjreddie.com/media/files/yolov3.weights>,并将该weight文件拷贝到`./data/darknet_weights/`下，因为这是darknet版本的预训练权重，需要转化为Tensorflow可用的版本，运行如下代码可以实现：
 
 ```shell
 python convert_weight.py
 ```
 
-这样转化后的Tensorflow checkpoint文件被存放在：`./data/darknet_weights/`目录。你也可以下载已经转化好的模型：
-
-[Google云盘](https://drive.google.com/drive/folders/1mXbNgNxyXPi7JNsnBaxEv1-nWr7SVoQt?usp=sharing) [GitHub Release](https://github.com/wizyoung/YOLOv3_TensorFlow/releases/) 
+这样转化后的Tensorflow checkpoint文件被存放在：`./data/darknet_weights/`目录。你也可以下载已经转化好的模型：[GitHub Release](https://github.com/DataXujing/YOLO-V3-Tensorflow/releases/tag/1.0)
 
 
 ### 3.🔰 训练数据构建
@@ -206,16 +204,20 @@ CUDA_VISIBLE_DEVICES=GPU_ID python train.py
 
 ### 5.🔖 推断
 
-我们使用`test_single_image.py`和`video_test.py`推断单张图片和视频，测试Demo在Section 6提供。你可以下载我们预训练的安全帽识别模型进行测试，下载地址：<>
+我们使用`test_single_image.py`和`video_test.py`推断单张图片和视频，测试Demo在`6.⛏Demo`提供。你可以下载我们预训练的安全帽识别模型进行测试，下载地址：[GitHub Release](https://github.com/DataXujing/YOLO-V3-Tensorflow/releases/tag/model)
 
+```
+python3 test_single_image.py /home/myuser/xujing/YOLO_V3_hat/data/my_data/JPEGImages/000002.jpg
+```
 
 ### 6.⛏Demo
 
-![]()
+![](./docs/test/test1.jpg)
 
-![]()
+![](./docs/test/test2.jpg)
 
-![]()
+![](./docs/test/test3.jpg)
+
 
 
 ### 7.⛏训练的一些Trick
@@ -224,36 +226,38 @@ CUDA_VISIBLE_DEVICES=GPU_ID python train.py
 
 (1) 使用two-stage训练或one-stage训练:
 
-Two-stage training:
++ Two-stage training:
 
-First stage: Restore darknet53_body part weights from COCO checkpoints, train the yolov3_head with big learning rate like 1e-3 until the loss reaches to a low level.
+    - 第一阶段：在COCO数据集训练的ckeckpoints上加载darknet53_body部分的weights，训练YOLO V3的head部分，使用较大的学习率比如0.001，直到损失降下来；
+    - 第二阶段：加载第一阶段训练的模型，训练整个模型的参数，使用较小的学习率比如0.0001。
 
-Second stage: Restore the weights from the first stage, then train the whole model with small learning rate like 1e-4 or smaller. At this stage remember to restore the optimizer parameters if you use optimizers like adam.
++ One-stage training:
 
-One-stage training:
+直接加载除Conv_6,Conv_14和Conv_22(这三层是输出层需要根据自己训练数据调整)的预训练模型，这种情况需要注意Loss的nan问题，对于该项目为了简单，我们采用One-stage training。
 
-Just restore the whole weight file except the last three convolution layers (Conv_6, Conv_14, Conv_22). In this condition, be careful about the possible nan loss value.
 
 (2) args.py中有很多有用的训练参数调整策略:
 
-Cosine decay of lr (SGDR)
++ 学习率的decay(Cosine decay of lr (SGDR))
 
-Multi-scale training
++ 多尺度训练（Multi-scale training）
 
-Label smoothing
++ 标签平滑（Label smoothing）
 
-Mix up data augmentation
++ 数据增强（Mix up data augmentation）
 
-Focal loss
++ Focal loss（来源于RetinaNet主要修正目标检测中的unblance问题）
 
 这么多策略，不一定都能提升你的模型性能，根据自己的数据集自行调整选择.
 
 (3) 注意：
 
-This [paper](https://arxiv.org/abs/1902.04103) from gluon-cv has proved that data augmentation is critical to YOLO v3, which is completely in consistent with my own experiments. Some data augmentation strategies that seems reasonable may lead to poor performance. For example, after introducing random color jittering, the mAP on my own dataset drops heavily. Thus I hope you pay extra attention to the data augmentation.
+来自于gluon-cv的这篇[paper](https://arxiv.org/abs/1902.04103) 已经证明对于YOLO V3数据增强是很有必要的, 但是对于我们的实验来看一些数据增强的策略看起来是合理的，但是会导致我们的模型不work,比如，使用随机的色彩抖动数据增强策略，我们的模型的mAP掉的很厉害，所有需要好好研究数据增强的使用策略。
 
-(4) Loss nan? Setting a bigger warm_up_epoch number or smaller learning rate and try several more times. If you fine-tune the whole model, using adam may cause nan value sometimes. You can try choosing momentum optimizer.
+(4) Loss nan? 
 
+出现Loss nan的情况尽量设置大一点的warm_up_epoch的值，或者小一点的学习率，多试几次。如果你使用的是one-stage的训练过程，使用adam优化器可能会出现nan的问题，请选择momentum optimizer
+。
 
 ### 8.😉 致谢
 

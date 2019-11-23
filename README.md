@@ -7,7 +7,7 @@
 
 ### 1. 📣 数据介绍
 
-确定了业务场景之后，需要收集大量的数据（之前参加过一个安全帽识别检测的比赛，但是数据在比赛平台无法下载为己用），一般来说包含两大来源，一部分是网络数据，可以通过百度、Google图片爬虫拿到，另一部分是用户场景的视频录像，后一部分相对来说数据量更大，但出于商业因素几乎不会开放。本文开源的安全帽检测数据集([SafetyHelmetWearing-Dataset, SHWD](https://github.com/njvisionpower/Safety-Helmet-Wearing-Dataset))主要通过爬虫拿到，总共有7581张图像，包含9044个佩戴安全帽的bounding box（正类），以及111514个未佩戴安全帽的bounding box(负类)，所有的图像用labelimg标注出目标区域及类别。其中每个bounding box的标签：“hat”表示佩戴安全帽，“person”表示普通未佩戴的行人头部区域的bounding box。另外本数据集中person标签的数据大多数来源于[SCUT-HEAD](https://github.com/HCIILAB/SCUT-HEAD-Dataset-Release)数据集，用于判断是未佩戴安全帽的人。大致说一下数据集构造的过程：
+确定了业务场景之后，需要收集大量的数据（之前参加过一个安全帽识别检测的比赛，但是数据在比赛平台无法下载为己用），一般来说包含两大来源，一部分是网络数据，可以通过百度、Google图片爬虫拿到，另一部分是用户场景的视频录像，后一部分相对来说数据量更大，但出于商业因素几乎不会开放。本项目使用开源的安全帽检测数据集([SafetyHelmetWearing-Dataset, SHWD](https://github.com/njvisionpower/Safety-Helmet-Wearing-Dataset))主要通过爬虫拿到，总共有7581张图像，包含9044个佩戴安全帽的bounding box（正类），以及111514个未佩戴安全帽的bounding box(负类)，所有的图像用labelimg标注出目标区域及类别。其中每个bounding box的标签：“hat”表示佩戴安全帽，“person”表示普通未佩戴的行人头部区域的bounding box。另外本数据集中person标签的数据大多数来源于[SCUT-HEAD](https://github.com/HCIILAB/SCUT-HEAD-Dataset-Release)数据集，用于判断是未佩戴安全帽的人。大致说一下数据集构造的过程：
 
 1.数据爬取
 
@@ -58,6 +58,8 @@ python convert_weight.py
 
 ### 3.🔰 训练数据构建
 
+训练集的整体结构同VOC相同，可以参考VOC构建自己的数据集。
+
 (1) annotation文件
 
 运行
@@ -65,13 +67,13 @@ python convert_weight.py
 ```shell
 python data_pro.py
 ```
-分割训练集，验证集，测试集并在`./data/my_data/`下生成`train.txt/val.txt/test.txt`，对于一张图像对应一行数据，包括`image_index`,`image_absolute_path`, `img_width`, `img_height`,`box_1`,`box_2`,...,`box_n`,每个字段中间是用空格分隔的，其中:
+分割训练集，验证集，测试集并在`./data/my_data/labal`下生成`train.txt/val.txt/test.txt`，对于一张图像对应一行数据，包括`image_index`,`image_absolute_path`, `img_width`, `img_height`,`box_1`,`box_2`,...,`box_n`,每个字段中间是用空格分隔的，其中:
 
 + `image_index`文本的行号
 + `image_absolute_path` 一定是绝对路径
 + `img_width`, `img_height`,`box_1`,`box_2`,...,`box_n`中涉及数值的取值一定取int型
 + `box_x`的形式为：`label_index, x_min,y_min,x_max,y_max`(注意坐标原点在图像的左上角)
-+ `label_index`是label对应的index(取值为0-class_num-1),这里要注意YOLO系列的模型训练与SSD不同，label不包含background
++ `label_index`是label对应的index(取值为[0~class_num-1]),这里要注意YOLO系列的模型训练与SSD不同，label不包含background
 
 例子：
 

@@ -100,7 +100,8 @@ person
 python get_kmeans.py
 ```
 <div align=center>
-    ![](docs/kmeans.png)
+    <img drc="docs/kmeans.pg"  />
+<!--     ![](docs/kmeans.png) -->
 </div>
 
 可以得到9个anchors和平均的IOU,把anchors保存在文本文件：`./data/yolo_anchors.txt`, 
@@ -216,15 +217,18 @@ python3 test_single_image.py /home/myuser/xujing/YOLO_V3_hat/data/my_data/JPEGIm
 ### 6.⛏Demo
 
 <div align=cneter>
-    ![](./docs/test/test1.jpg)
+    <img src="./docs/test/test1.jpg"   />
+<!--     ![](./docs/test/test1.jpg) -->
 </div>
 
 <div align=center>
-    ![](./docs/test/test2.jpg)
+    <img src="./docs/test/test2.jpg" />
+<!--     ![](./docs/test/test2.jpg) -->
 </div>
 
 <div align=center>
-    ![](./docs/test/test3.jpg)
+    <img src="./docs/test/test3.jpg" />
+<!--     ![](./docs/test/test3.jpg) -->
 </div>
 
 ### 7.⛏训练的一些Trick
@@ -268,14 +272,11 @@ python3 test_single_image.py /home/myuser/xujing/YOLO_V3_hat/data/my_data/JPEGIm
 
 ### 8.😉 致谢
 
-<div align=center>
-
 Name                      |   GitHub                                                       |
 :-:                       |  :-:                                                           |
 :shipit: **Wizyoung**     |   <https://github.com/wizyoung/YOLOv3_TensorFlow>              |
 :shipit: **njvisionpower**     |<https://github.com/njvisionpower/Safety-Helmet-Wearing-Dataset>|
 :shipit: **HCIILAB**     | <https://github.com/HCIILAB/SCUT-HEAD-Dataset-Release>         |
 
-</div>
 
 

@@ -100,7 +100,7 @@ person
 python get_kmeans.py
 ```
 <div align=center>
-    <img drc="docs/kmeans.pg"  />
+    <img drc="./docs/kmeans.png"  />
 <!--     ![](docs/kmeans.png) -->
 </div>
 

@@ -106,7 +106,7 @@ python get_kmeans.py
 
 可以得到9个anchors和平均的IOU,把anchors保存在文本文件：`./data/yolo_anchors.txt`, 
 
-**注意: Kmeans计算出的YOLO Anchors是在在调整大小的图像比例的，默认的调整大小方法是保持图像的纵横比。**
+**注意: Kmeans计算出的YOLO Anchors是在调整大小的图像比例的，默认的调整大小方法是保持图像的纵横比。**
 
 
 
